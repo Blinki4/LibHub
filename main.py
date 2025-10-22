@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Depends, status, Response
 
-from router import Router
-
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, select
+from sqlalchemy import select
 from pydantic import BaseModel
-from typing import Annotated
+from typing import Annotated, Union
+
+from router import Router
+from models.game_model import GameModel, Base
 
 
 app = FastAPI()
@@ -27,30 +27,26 @@ async def get_session():
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-class GameModel(Base):
-    __tablename__ = 'games'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    description: Mapped[str]
-    rating: Mapped[int]
-    image_path: Mapped[str] # TODO обработка
-
+##################
 
 class GameCreateShema(BaseModel):
     title: str
-    description: str
-    rating: int
-    image_path: str
+    description: Union[str, None] = None
+    rating: Union[int, None] = None
+    image_path: Union[str, None] = None
 
 
 class GameSchema(GameCreateShema):
     id: int
 
+
+class GameUpdateSchema(BaseModel):
+    title: Union[str, None] = None
+    description: Union[str, None] = None
+    rating: Union[int, None] = None
+    image_path: Union[str, None] = None
+
+############
 
 @app.post(
     Router.SETUP_DB,
@@ -59,8 +55,9 @@ class GameSchema(GameCreateShema):
 )
 async def setup_database():
     async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-    return {'ok': True}
+    return {'message': 'Success'}
 
 
 @app.post(
@@ -78,11 +75,13 @@ async def create_game(data: GameCreateShema, session: SessionDep, response: Resp
     )
     session.add(new_game)
     await session.commit()
-    return {'ok': True, 'game': {
-        'title': new_game.title,
-        'description': new_game.description,
-        'rating': new_game.rating,
-        'image_path': new_game.image_path,
+    return {'message': 'Success', 
+            'game': {
+                'id': new_game.id,
+                'title': new_game.title,
+                'description': new_game.description,
+                'rating': new_game.rating,
+                'image_path': new_game.image_path,
     }}
 
 
@@ -95,11 +94,8 @@ async def create_game(data: GameCreateShema, session: SessionDep, response: Resp
 async def get_games(session: SessionDep):
     query = select(GameModel)
     data = await session.execute(query)
-    return {
-        'games' : [
-            game for game in data.scalars().all()
-        ]
-    }
+    return [ game for game in data.scalars().all() ]
+
 
 @app.put(
         '/games/{game_id}',
@@ -107,19 +103,24 @@ async def get_games(session: SessionDep):
         tags=['Games'],
         status_code=status.HTTP_200_OK,
         )
-async def update_game(game_id: int, data: GameCreateShema, session: SessionDep, response: Response):
+async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep, response: Response):
     query = select(GameModel).where(GameModel.id == game_id)
     result = await session.execute(query)
     game = result.scalar_one_or_none()
 
     if not game:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return {'message': 'Игра не найдена'}
+        return {'message': 'Not Found'}
     
-    game.title = data.title
-    game.description = data.description
-    game.rating = data.rating
-    game.image_path = data.image_path
+    #TODO if title -> data.title ...
+    if data.title:
+        game.title = data.title
+    if data.description:
+        game.description = data.description
+    if data.rating:
+        game.rating = data.rating
+    if data.image_path:
+        game.image_path = data.image_path
 
     await session.commit()
     await session.refresh(game)
