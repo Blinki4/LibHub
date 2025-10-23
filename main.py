@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import select, delete
 from typing import Annotated
 
-from router import Router
+from router.game_routes import GameRouter
 from models.game_model import GameModel, Base
 from shemes.game_scheme import GameUpdateSchema, GameCreateShema
 
@@ -27,7 +27,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 @app.post(
-        Router.CREATE_GAME,
+        GameRouter.CREATE_GAME,
         status_code=status.HTTP_201_CREATED,
         summary='Добавить игру', 
         tags=['Games'],
@@ -51,7 +51,7 @@ async def create_game(data: GameCreateShema, session: SessionDep, response: Resp
 
 
 @app.get(
-        Router.GET_GAMES,
+        GameRouter.GET_GAMES,
         summary='Получить список игр',
         tags=['Games'],
         status_code=status.HTTP_200_OK
@@ -63,7 +63,7 @@ async def get_games(session: SessionDep):
 
 
 @app.put(
-        '/games/{game_id}',
+        GameRouter.UPDATE_GAME,
         summary='Редактировать игру',
         tags=['Games'],
         status_code=status.HTTP_200_OK,
@@ -93,7 +93,7 @@ async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep,
 
 
 @app.get(
-        '/games/{game_id}',
+        GameRouter.GET_GAME,
         summary='Получить игру по id',
         tags=['Games']
         )
@@ -108,7 +108,7 @@ async def get_game(game_id: int, session: SessionDep, response: Response):
 
 
 @app.delete(
-    '/games/{game_id}',
+    GameRouter.DELETE_GAME,
     summary='Удалить игру по id',
     tags=['Games']
 )
@@ -121,7 +121,7 @@ async def delete_game(game_id: int, session: SessionDep, response: Response):
 
 
 @app.post(
-    Router.SETUP_DB,
+    GameRouter.SETUP_DB,
     summary='Не юзать',
     tags=['Private'],
 )
