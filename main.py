@@ -6,7 +6,7 @@ from typing import Annotated
 
 from router.game_routes import GameRouter
 from models.game_model import GameModel, Base
-from shemes.game_scheme import GameUpdateSchema, GameCreateShema
+from shemas.game_scheme import GameUpdateSchema, GameCreateShema
 
 app = FastAPI()
 
