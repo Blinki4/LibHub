@@ -8,12 +8,10 @@ class GameUpdateSchema(BaseModel):
     rating: Union[int, None] = None
     image_path: Union[str, None] = None
 
+
 class GameCreateShema(GameUpdateSchema):
     title: str
-    description: Union[str, None] = None
-    rating: Union[int, None] = None
-    image_path: Union[str, None] = None
-
+    
 
 class GameSchema(GameCreateShema):
     id: int

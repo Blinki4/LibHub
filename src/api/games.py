@@ -1,38 +1,22 @@
-from fastapi import FastAPI, Depends, status, Response
-
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from fastapi import APIRouter, status, HTTPException, Response
 from sqlalchemy import select, delete
-from typing import Annotated
-
-from router.game_routes import GameRouter
-from models.game_model import GameModel, Base
-from shemas.game_scheme import GameUpdateSchema, GameCreateShema
-
-app = FastAPI()
-
-engine = create_async_engine(
-    "postgresql+asyncpg://admin:SS4MQ9FEEwEUlrkaU4wkftvKSMuDwVtA@dpg-d3rr6nngi27c73faddrg-a.frankfurt-postgres.render.com/lib_hub"
-    )
 
 
-new_session = async_sessionmaker(engine, expire_on_commit=False)
+from src.database import engine, Base
+from src.api.dependencies import SessionDep
+from src.shemas.games import GameCreateShema, GameUpdateSchema
+from src.models.games import GameModel
 
 
-async def get_session():
-    async with new_session() as session:
-        yield session
+router = APIRouter()
 
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-
-@app.post(
-        GameRouter.CREATE_GAME,
+@router.post(
+        '/games',
         status_code=status.HTTP_201_CREATED,
         summary='Добавить игру', 
         tags=['Games'],
         )
-async def create_game(data: GameCreateShema, session: SessionDep, response: Response):
+async def create_game(data: GameCreateShema, session: SessionDep):
     new_game = GameModel(
         title = data.title,
         description = data.description,
@@ -50,8 +34,8 @@ async def create_game(data: GameCreateShema, session: SessionDep, response: Resp
     }}
 
 
-@app.get(
-        GameRouter.GET_GAMES,
+@router.get(
+        '/games',
         summary='Получить список игр',
         tags=['Games'],
         status_code=status.HTTP_200_OK
@@ -62,21 +46,19 @@ async def get_games(session: SessionDep):
     return [ game for game in data.scalars().all() ]
 
 
-@app.put(
-        GameRouter.UPDATE_GAME,
+@router.put(
+        '/games/{game_id}',
         summary='Редактировать игру',
         tags=['Games'],
         status_code=status.HTTP_200_OK,
         )
-async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep, response: Response):
+async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep):
     query = select(GameModel).where(GameModel.id == game_id)
     result = await session.execute(query)
     game = result.scalar_one_or_none()
 
     if not game:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {'message': 'Not Found'}
-    
+        raise HTTPException(status_code=404) #TODO: Переделать везде на такой вариант
 
     if data.title:
         game.title = data.title
@@ -92,8 +74,8 @@ async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep,
     return game
 
 
-@app.get(
-        GameRouter.GET_GAME,
+@router.get(
+        '/games/{game_id}',
         summary='Получить игру по id',
         tags=['Games']
         )
@@ -107,8 +89,8 @@ async def get_game(game_id: int, session: SessionDep, response: Response):
     return game
 
 
-@app.delete(
-    GameRouter.DELETE_GAME,
+@router.delete(
+    '/games/{game_id}',
     summary='Удалить игру по id',
     tags=['Games']
 )
@@ -120,8 +102,8 @@ async def delete_game(game_id: int, session: SessionDep, response: Response):
 
 
 
-@app.post(
-    GameRouter.SETUP_DB,
+@router.post(
+    '/setup_database',
     summary='Не юзать',
     tags=['Private'],
 )
