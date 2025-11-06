@@ -14,7 +14,7 @@ router = APIRouter()
         '/games',
         status_code=status.HTTP_201_CREATED,
         summary='Добавить игру', 
-        tags=['Games'],
+        tags=['Games 🎮'],
         )
 async def create_game(data: GameCreateShema, session: SessionDep):
     new_game = GameModel(
@@ -37,7 +37,7 @@ async def create_game(data: GameCreateShema, session: SessionDep):
 @router.get(
         '/games',
         summary='Получить список игр',
-        tags=['Games'],
+        tags=['Games 🎮'],
         status_code=status.HTTP_200_OK
         )
 async def get_games(session: SessionDep):
@@ -49,7 +49,7 @@ async def get_games(session: SessionDep):
 @router.put(
         '/games/{game_id}',
         summary='Редактировать игру',
-        tags=['Games'],
+        tags=['Games 🎮'],
         status_code=status.HTTP_200_OK,
         )
 async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep):
@@ -77,7 +77,7 @@ async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep)
 @router.get(
         '/games/{game_id}',
         summary='Получить игру по id',
-        tags=['Games']
+        tags=['Games 🎮']
         )
 async def get_game(game_id: int, session: SessionDep, response: Response):
     query = select(GameModel).where(GameModel.id == game_id)
@@ -92,7 +92,7 @@ async def get_game(game_id: int, session: SessionDep, response: Response):
 @router.delete(
     '/games/{game_id}',
     summary='Удалить игру по id',
-    tags=['Games']
+    tags=['Games 🎮']
 )
 async def delete_game(game_id: int, session: SessionDep, response: Response):
     query = delete(GameModel).where(GameModel.id == game_id)
@@ -105,7 +105,7 @@ async def delete_game(game_id: int, session: SessionDep, response: Response):
 @router.post(
     '/setup_database',
     summary='Не юзать',
-    tags=['Private'],
+    tags=['Private ❌'],
 )
 async def setup_database():
     async with engine.begin() as conn:
