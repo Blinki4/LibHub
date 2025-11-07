@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import select, delete
+from fastapi import APIRouter, HTTPException, Response
+from sqlalchemy import select
 
 from src.shemas.users import UserRegisterSchema, UserLoginSchema
 from src.models.users import UsersModel
@@ -27,6 +27,10 @@ async def register(creds: UserRegisterSchema, session: SessionDep):
     )
     session.add(new_user)
     await session.commit()
+    return {
+        'message' : 'Success',
+        'user': new_user
+        }
 
 
 
@@ -35,5 +39,5 @@ async def register(creds: UserRegisterSchema, session: SessionDep):
         summary='Авторизация',
         tags=['Users 😐']
         )
-async def login(creds: UserLoginSchema):
+async def login(creds: UserLoginSchema, session: SessionDep, response: Response):
     ...
