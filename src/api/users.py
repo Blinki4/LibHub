@@ -51,4 +51,4 @@ async def login(creds: UserLoginSchema, session: SessionDep, response: Response)
         token = security.create_access_token(uid = str(user.id))
         response.set_cookie(config.JWT_ACCESS_COOKIE_NAME, token)
         response.set_cookie('uid', user.id)
-    return {'message': 'Success'}
+    return {'access_token': token}
