@@ -1,17 +1,19 @@
-from fastapi import APIRouter, status, HTTPException, Response
+from fastapi import APIRouter, status, HTTPException, Response, Depends
 from sqlalchemy import select, delete
 
 
 from src.database import engine, Base
-from src.api.dependencies import SessionDep
+from src.api.dependencies import SessionDep, SecurityDep
 from src.shemas.games import GameCreateShema, GameUpdateSchema
 from src.models.games import GameModel
+from src.api.config import security
 
 
 router = APIRouter()
 
 @router.post(
         '/games',
+        dependencies=[SecurityDep],
         status_code=status.HTTP_201_CREATED,
         summary='Добавить игру', 
         tags=['Games 🎮'],
@@ -36,6 +38,7 @@ async def create_game(data: GameCreateShema, session: SessionDep):
 
 @router.get(
         '/games',
+        dependencies=[SecurityDep],
         summary='Получить список игр',
         tags=['Games 🎮'],
         status_code=status.HTTP_200_OK
@@ -48,6 +51,7 @@ async def get_games(session: SessionDep):
 
 @router.put(
         '/games/{game_id}',
+        dependencies=[SecurityDep],
         summary='Редактировать игру',
         tags=['Games 🎮'],
         status_code=status.HTTP_200_OK,
@@ -76,6 +80,7 @@ async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep)
 
 @router.get(
         '/games/{game_id}',
+        dependencies=[SecurityDep],
         summary='Получить игру по id',
         tags=['Games 🎮']
         )
@@ -91,6 +96,7 @@ async def get_game(game_id: int, session: SessionDep, response: Response):
 
 @router.delete(
     '/games/{game_id}',
+    dependencies=[SecurityDep],
     summary='Удалить игру по id',
     tags=['Games 🎮']
 )
@@ -104,6 +110,7 @@ async def delete_game(game_id: int, session: SessionDep, response: Response):
 
 @router.post(
     '/setup_database',
+    dependencies=[SecurityDep],
     summary='Не юзать',
     tags=['Private ❌'],
 )
