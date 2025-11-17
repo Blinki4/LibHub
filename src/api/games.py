@@ -2,11 +2,10 @@ from fastapi import APIRouter, status, HTTPException, Response, Depends
 from sqlalchemy import select, delete
 
 
-from src.database import engine, Base
 from src.api.dependencies import SessionDep, SecurityDep
 from src.shemas.games import GameCreateShema, GameUpdateSchema
 from src.models.games import GameModel
-from src.api.config import security
+
 
 
 router = APIRouter()
@@ -24,6 +23,7 @@ async def create_game(data: GameCreateShema, session: SessionDep):
         description = data.description,
         rating = data.rating,
         image_path = data.image_path,
+        #TODO: user id 
     )
     session.add(new_game)
     await session.commit()
@@ -104,18 +104,4 @@ async def delete_game(game_id: int, session: SessionDep, response: Response):
     query = delete(GameModel).where(GameModel.id == game_id)
     await session.execute(query)
     await session.commit()
-    return {'message': 'Success'}
-
-
-
-@router.post(
-    '/setup_database',
-    dependencies=[SecurityDep],
-    summary='Не юзать',
-    tags=['Private ❌'],
-)
-async def setup_database():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
     return {'message': 'Success'}

@@ -6,4 +6,4 @@ class UserLoginSchema(BaseModel):
     password: str
 
 class UserRegisterSchema(UserLoginSchema):
-    ...
+    pass
