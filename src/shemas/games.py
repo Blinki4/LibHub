@@ -1,17 +1,22 @@
-from typing import Union
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
-class GameUpdateSchema(BaseModel):
-    title: Union[str, None] = None
-    description: Union[str, None] = None
-    rating: Union[int, None] = None
-    image_path: Union[str, None] = None
+class SGameUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    title: str | None = None
+    description: str | None = None
+    rating: int | None = None
+    image_path: str | None = None
 
 
-class GameCreateShema(GameUpdateSchema):
+class SGameCreate(SGameUpdate):
     title: str
-    
 
-class GameSchema(GameCreateShema):
+
+class SGame(SGameCreate):
     id: int
+
+class SGameCreateResponse(BaseModel):
+    message: str
+    game_id: int

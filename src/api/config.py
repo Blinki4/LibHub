@@ -10,4 +10,5 @@ config.JWT_COOKIE_CSRF_PROTECT = False # DEV ONLY
 
 
 
+
 security = AuthX(config=config)

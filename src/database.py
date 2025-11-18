@@ -17,7 +17,7 @@ async def get_session():
         yield session
 
 
-class Base(DeclarativeBase):
+class Model(DeclarativeBase):
     pass
 
 

@@ -3,8 +3,9 @@ from sqlalchemy import select, delete
 
 
 from src.api.dependencies import SessionDep, SecurityDep
-from src.shemas.games import GameCreateShema, GameUpdateSchema
-from src.models.games import GameModel
+from src.shemas.games import SGameCreate, SGameUpdate, SGameCreateResponse, SGame
+from src.models.games import GameOrm
+from src.repositories.games import GamesRepository
 
 
 
@@ -17,23 +18,13 @@ router = APIRouter()
         summary='Добавить игру', 
         tags=['Games 🎮'],
         )
-async def create_game(data: GameCreateShema, session: SessionDep):
-    new_game = GameModel(
-        title = data.title,
-        description = data.description,
-        rating = data.rating,
-        image_path = data.image_path,
-        #TODO: user id 
-    )
-    session.add(new_game)
-    await session.commit()
-    return {'message': 'Success', 
-            'game': {
-                'id': new_game.id,
-                'title': new_game.title,
-                'rating': new_game.rating,
-                'image_path': new_game.image_path,
-    }}
+async def create_game(data: SGameCreate) -> SGameCreateResponse:
+    game_id = await GamesRepository.add_game(data)
+    return {
+        'message' : 'Success',
+        'game_id': game_id
+    }
+
 
 
 @router.get(
@@ -43,10 +34,10 @@ async def create_game(data: GameCreateShema, session: SessionDep):
         tags=['Games 🎮'],
         status_code=status.HTTP_200_OK
         )
-async def get_games(session: SessionDep):
-    query = select(GameModel)
-    data = await session.execute(query)
-    return [ game for game in data.scalars().all() ]
+async def get_games() -> list[SGame]:
+    games = await GamesRepository.find_all()
+    return games
+
 
 
 @router.put(
@@ -56,8 +47,8 @@ async def get_games(session: SessionDep):
         tags=['Games 🎮'],
         status_code=status.HTTP_200_OK,
         )
-async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep):
-    query = select(GameModel).where(GameModel.id == game_id)
+async def update_game(game_id: int, data: SGameUpdate, session: SessionDep):
+    query = select(GameOrm).where(GameOrm.id == game_id)
     result = await session.execute(query)
     game = result.scalar_one_or_none()
 
@@ -85,7 +76,7 @@ async def update_game(game_id: int, data: GameUpdateSchema, session: SessionDep)
         tags=['Games 🎮']
         )
 async def get_game(game_id: int, session: SessionDep, response: Response):
-    query = select(GameModel).where(GameModel.id == game_id)
+    query = select(GameOrm).where(GameOrm.id == game_id)
     result = await session.execute(query)
     game = result.scalar_one_or_none()
     if not game:
@@ -101,7 +92,7 @@ async def get_game(game_id: int, session: SessionDep, response: Response):
     tags=['Games 🎮']
 )
 async def delete_game(game_id: int, session: SessionDep, response: Response):
-    query = delete(GameModel).where(GameModel.id == game_id)
+    query = delete(GameOrm).where(GameOrm.id == game_id)
     await session.execute(query)
     await session.commit()
     return {'message': 'Success'}
