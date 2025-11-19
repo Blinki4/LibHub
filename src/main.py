@@ -1,16 +1,26 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.dependencies import SessionDep
-
-
 from datetime import datetime
 from typing import Callable
+from contextlib import asynccontextmanager
+
+
+from src.database import create_tables, delete_tables
 from src.api import main_router
 from src.models.request_logs import RequestLogsModel
 from src.database import new_session
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # await delete_tables()
+    # print('База данных очищена')
+    await create_tables()
+    print('База данных готова к работе')
+    yield
+    print('Завершение')
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

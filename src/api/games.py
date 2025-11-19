@@ -9,14 +9,17 @@ from src.repositories.games import GamesRepository
 
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix='/games',
+    tags=['Games 🎮']
+)
+
 
 @router.post(
-        '/games',
+        '',
         dependencies=[SecurityDep],
         status_code=status.HTTP_201_CREATED,
-        summary='Добавить игру', 
-        tags=['Games 🎮'],
+        summary='Добавить игру',
         )
 async def create_game(data: SGameCreate) -> SGameCreateResponse:
     game_id = await GamesRepository.add_game(data)
@@ -28,71 +31,44 @@ async def create_game(data: SGameCreate) -> SGameCreateResponse:
 
 
 @router.get(
-        '/games',
+        '',
         dependencies=[SecurityDep],
         summary='Получить список игр',
-        tags=['Games 🎮'],
-        status_code=status.HTTP_200_OK
         )
 async def get_games() -> list[SGame]:
     games = await GamesRepository.find_all()
     return games
 
 
-
 @router.put(
-        '/games/{game_id}',
+        '/{game_id}',
         dependencies=[SecurityDep],
         summary='Редактировать игру',
-        tags=['Games 🎮'],
-        status_code=status.HTTP_200_OK,
         )
-async def update_game(game_id: int, data: SGameUpdate, session: SessionDep):
-    query = select(GameOrm).where(GameOrm.id == game_id)
-    result = await session.execute(query)
-    game = result.scalar_one_or_none()
-
+async def update_game(game_id: int, data: SGameUpdate) -> SGame:
+    game = await GamesRepository.update_game(game_id, data)
     if not game:
-        raise HTTPException(status_code=404) #TODO: Переделать везде на такой вариант
-
-    if data.title:
-        game.title = data.title
-    if data.description:
-        game.description = data.description
-    if data.rating:
-        game.rating = data.rating
-    if data.image_path or data.image_path == '':
-        game.image_path = data.image_path
-
-    await session.commit()
-    await session.refresh(game)
+        raise HTTPException(status_code=404)
     return game
 
 
 @router.get(
-        '/games/{game_id}',
+        '/{game_id}',
         dependencies=[SecurityDep],
         summary='Получить игру по id',
-        tags=['Games 🎮']
         )
-async def get_game(game_id: int, session: SessionDep, response: Response):
-    query = select(GameOrm).where(GameOrm.id == game_id)
-    result = await session.execute(query)
-    game = result.scalar_one_or_none()
+async def get_game(game_id: int) -> SGame:
+    game = await GamesRepository.find_game(game_id)
     if not game:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {'message': 'Not Found'}
+        raise HTTPException(status_code=404)
     return game
 
 
 @router.delete(
-    '/games/{game_id}',
+    '/{game_id}',
     dependencies=[SecurityDep],
     summary='Удалить игру по id',
-    tags=['Games 🎮']
 )
-async def delete_game(game_id: int, session: SessionDep, response: Response):
-    query = delete(GameOrm).where(GameOrm.id == game_id)
-    await session.execute(query)
-    await session.commit()
+async def delete_game(game_id: int) -> dict[str, str]:
+    await GamesRepository.delete_game(game_id)
     return {'message': 'Success'}
