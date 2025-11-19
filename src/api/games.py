@@ -1,10 +1,8 @@
-from fastapi import APIRouter, status, HTTPException, Response, Depends
-from sqlalchemy import select, delete
+from fastapi import APIRouter, status, HTTPException
 
 
-from src.api.dependencies import SessionDep, SecurityDep
+from src.api.dependencies import SecurityDep
 from src.shemas.games import SGameCreate, SGameUpdate, SGameCreateResponse, SGame
-from src.models.games import GameOrm
 from src.repositories.games import GamesRepository
 
 
@@ -21,7 +19,9 @@ router = APIRouter(
         status_code=status.HTTP_201_CREATED,
         summary='Добавить игру',
         )
-async def create_game(data: SGameCreate) -> SGameCreateResponse:
+async def create_game(
+        data: SGameCreate
+) -> SGameCreateResponse:
     game_id = await GamesRepository.add_game(data)
     return {
         'message' : 'Success',
@@ -45,7 +45,9 @@ async def get_games() -> list[SGame]:
         dependencies=[SecurityDep],
         summary='Редактировать игру',
         )
-async def update_game(game_id: int, data: SGameUpdate) -> SGame:
+async def update_game(
+        game_id: int, data: SGameUpdate
+) -> SGame:
     game = await GamesRepository.update_game(game_id, data)
     if not game:
         raise HTTPException(status_code=404)
@@ -57,7 +59,9 @@ async def update_game(game_id: int, data: SGameUpdate) -> SGame:
         dependencies=[SecurityDep],
         summary='Получить игру по id',
         )
-async def get_game(game_id: int) -> SGame:
+async def get_game(
+        game_id: int
+) -> SGame:
     game = await GamesRepository.find_game(game_id)
     if not game:
         raise HTTPException(status_code=404)
@@ -69,6 +73,8 @@ async def get_game(game_id: int) -> SGame:
     dependencies=[SecurityDep],
     summary='Удалить игру по id',
 )
-async def delete_game(game_id: int) -> dict[str, str]:
+async def delete_game(
+        game_id: int
+) -> dict[str, str]:
     await GamesRepository.delete_game(game_id)
     return {'message': 'Success'}
