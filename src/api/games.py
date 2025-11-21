@@ -29,7 +29,6 @@ async def create_game(
     }
 
 
-
 @router.get(
         '',
         dependencies=[SecurityDep],
